@@ -1,6 +1,7 @@
 [package]
 name = "template_rs_cli"
 description = "A CLI tool to generate and run rust files from rust templates in the .tmrs format"
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
