@@ -2,10 +2,10 @@
 name = "template_rs_cli"
 description = "A CLI tool to generate and run rust files from rust templates in the .tmrs format"
 license = "MIT"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.26", features = ["derive"] }
-rust_templates = { version = "0.1.1", features = ["execute"] }
-tokio = "1.43.0"
+tron = { version = "1.0.0", features = ["execute"] }
+tokio = { version = "1.43.0", features = ["full"] }

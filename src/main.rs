@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use rust_templates::{Template, TemplateRef, TemplateAssembler, Result};
+use tron::{TronTemplate, TronRef, TronAssembler, Result};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -89,7 +89,7 @@ fn parse_key_values(pairs: &[String]) -> HashMap<String, String> {
 }
 
 /// Apply values to a template
-fn apply_template_values(template: &mut Template, values: &HashMap<String, String>) -> Result<()> {
+fn apply_template_values(template: &mut TronTemplate, values: &HashMap<String, String>) -> Result<()> {
     for (key, value) in values {
         template.set(key, value)?;
     }
@@ -104,10 +104,10 @@ async fn run() -> Result<()> {
             let template_content = match (content, file) {
                 (Some(content), None) => content,
                 (None, Some(file)) => fs::read_to_string(file)?,
-                (None, None) => return Err(rust_templates::TemplateError::Parse(
+                (None, None) => return Err(tron::TronError::Parse(
                     "Either content or file must be provided".into()
                 )),
-                (Some(_), Some(_)) => return Err(rust_templates::TemplateError::Parse(
+                (Some(_), Some(_)) => return Err(tron::TronError::Parse(
                     "Cannot provide both content and file".into()
                 )),
             };
@@ -116,7 +116,7 @@ async fn run() -> Result<()> {
         }
         
         Commands::Render { template, values, output } => {
-            let mut template = Template::from_file(template)?;
+            let mut template = TronTemplate::from_file(template)?;
             let values = parse_key_values(&values);
             apply_template_values(&mut template, &values)?;
             
@@ -128,8 +128,8 @@ async fn run() -> Result<()> {
         }
         
         Commands::Execute { template, values, dependencies } => {
-            let template = Template::from_file(template)?;
-            let mut template_ref = TemplateRef::new(template);
+            let template = TronTemplate::from_file(template)?;
+            let mut template_ref = TronRef::new(template);
             
             // Add dependencies
             for dep in dependencies {
@@ -138,7 +138,7 @@ async fn run() -> Result<()> {
             
             // Set values
             let values = parse_key_values(&values);
-            apply_template_values(&mut template_ref.template, &values)?;
+            apply_template_values( template_ref.inner_mut(), &values)?;
             
             // Execute and print output
             let output = template_ref.execute().await?;
@@ -146,12 +146,13 @@ async fn run() -> Result<()> {
         }
         
         Commands::Assemble { templates, values, output } => {
-            let mut assembler = TemplateAssembler::new();
+            let mut assembler = TronAssembler::new();
             
             // Load all templates
             for path in templates {
-                let template = Template::from_file(path)?;
-                assembler.add_template(template);
+                let template = TronTemplate::from_file(path)?;
+                let tronref = TronRef::new(template);
+                assembler.add_template(tronref);
             }
             
             // Set global values
